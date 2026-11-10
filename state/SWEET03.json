@@ -1,9 +1,0 @@
-﻿{
-    "jobId":  "SWEET03",
-    "status":  "WAITING",
-    "message":  "Queued",
-    "progress":  0,
-    "exitCode":  -1,
-    "attempt":  0,
-    "updated":  "2026-11-10T12:46:32.4927792+08:00"
-}

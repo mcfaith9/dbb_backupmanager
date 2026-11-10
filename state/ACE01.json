@@ -1,9 +1,0 @@
-﻿{
-    "jobId":  "ACE01",
-    "status":  "STOPPED",
-    "message":  "Stopped by user; restartable transfer can resume",
-    "progress":  0,
-    "exitCode":  -1,
-    "attempt":  0,
-    "updated":  "2026-11-10T12:47:03.6243332+08:00"
-}
