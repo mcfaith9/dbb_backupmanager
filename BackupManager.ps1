@@ -8,7 +8,8 @@ $ConfigPath = Join-Path $Root 'config\backup-jobs.json'
 $Worker = Join-Path $Root 'workers\BackupWorker.ps1'
 $LogDir = Join-Path $Root 'logs'
 $StateDir = Join-Path $Root 'state'
-New-Item -ItemType Directory -Force -Path $LogDir, $StateDir | Out-Null
+$CredentialDir = Join-Path $Root 'credentials'
+New-Item -ItemType Directory -Force -Path $LogDir, $StateDir, $CredentialDir | Out-Null
 
 if (!(Test-Path -LiteralPath $ConfigPath)) { [System.Windows.Forms.MessageBox]::Show("Configuration file not found:`r`n$ConfigPath", 'Backup Manager', 'OK', 'Error') | Out-Null; exit 1 }
 if (!(Test-Path -LiteralPath $Worker)) { [System.Windows.Forms.MessageBox]::Show("Worker file not found:`r`n$Worker", 'Backup Manager', 'OK', 'Error') | Out-Null; exit 1 }
@@ -83,7 +84,8 @@ function LaunchNextJob {
     $job = $script:queue[0]
     if ($script:queue.Count -gt 1) { $script:queue = @($script:queue | Select-Object -Skip 1) } else { $script:queue = @() }
     $jobLog = Join-Path $LogDir ($job.id + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
-    $arguments = @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$Worker,'-JobId',$job.id,'-ConfigPath',$ConfigPath,'-StatePath',(StatePath $job),'-LogPath',$jobLog)
+    $credentialPath = Join-Path $CredentialDir ($job.host + '.credential.xml')
+    $arguments = @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$Worker,'-JobId',$job.id,'-ConfigPath',$ConfigPath,'-StatePath',(StatePath $job),'-LogPath',$jobLog,'-CredentialPath',$credentialPath)
     $argumentLine = ($arguments | ForEach-Object { '"' + ([string]$_).Replace('"','\"') + '"' }) -join ' '
     try {
         SaveState $job 'CHECKING CONNECTION' 'Starting background worker'
@@ -101,6 +103,15 @@ function StartQueue([bool]$freshRun = $false) {
     $chosen = @(GetSelectedJobs)
     if (!$chosen -or $chosen.Count -eq 0) { [System.Windows.Forms.MessageBox]::Show('Select a computer and at least one folder first.', 'No folders selected', 'OK', 'Information') | Out-Null; return }
     $script:jobs = $chosen
+    foreach ($selectedJob in $chosen) {
+        $credPath = Join-Path $CredentialDir ($selectedJob.host + '.credential.xml')
+        if (!(Test-Path -LiteralPath $credPath)) {
+            [System.Windows.Forms.MessageBox]::Show("Network credentials are missing for $($selectedJob.computer) ($($selectedJob.host)).`r`nClick NETWORK CREDENTIALS, enter the password, and save it before starting the backup.",'Credentials Required','OK','Warning') | Out-Null
+            $computerList.SelectedItem = $selectedJob.computer
+            ShowCredentialDialog
+            if (!(Test-Path -LiteralPath $credPath)) { return }
+        }
+    }
     $script:stopping = $false
     if ($freshRun) {
         foreach ($job in $script:jobs) { SaveState $job 'WAITING' 'Queued in a new selected backup run' }
@@ -149,6 +160,63 @@ function TickQueue {
     RefreshUI
 }
 
+
+function Get-CredentialProfile($computer) {
+    $profiles = @($cfg.credentialProfiles)
+    return $profiles | Where-Object { $_.computer -eq $computer } | Select-Object -First 1
+}
+function Test-CredentialSaved($hostName) {
+    $path = Join-Path $CredentialDir ($hostName + '.credential.xml')
+    return (Test-Path -LiteralPath $path)
+}
+function ShowCredentialDialog {
+    $computer = [string]$computerList.SelectedItem
+    if ([string]::IsNullOrWhiteSpace($computer)) { return }
+    $profile = Get-CredentialProfile $computer
+    if (!$profile) { [System.Windows.Forms.MessageBox]::Show('No credential profile is configured for this computer.','Network Credentials','OK','Information') | Out-Null; return }
+    $hostName = [string]$profile.host
+    $path = Join-Path $CredentialDir ($hostName + '.credential.xml')
+    $dlg = New-Object System.Windows.Forms.Form
+    $dlg.Text = "Network Credentials - $computer"
+    $dlg.Size = New-Object System.Drawing.Size(500,260)
+    $dlg.StartPosition = 'CenterParent'
+    $dlg.FormBorderStyle = 'FixedDialog'
+    $dlg.MaximizeBox = $false
+    $dlg.MinimizeBox = $false
+    $dlg.Font = New-Object System.Drawing.Font('Segoe UI',9)
+    $lblHost = New-Object System.Windows.Forms.Label; $lblHost.Text = "Computer: $computer    IP: $hostName"; $lblHost.Location='18,18'; $lblHost.Size='440,24'; $dlg.Controls.Add($lblHost)
+    $lblUser = New-Object System.Windows.Forms.Label; $lblUser.Text='Windows username'; $lblUser.Location='18,55'; $lblUser.Size='150,22'; $dlg.Controls.Add($lblUser)
+    $txtUser = New-Object System.Windows.Forms.TextBox; $txtUser.Location='175,52'; $txtUser.Size='285,25'; $txtUser.Text=[string]$profile.username; $dlg.Controls.Add($txtUser)
+    $lblPass = New-Object System.Windows.Forms.Label; $lblPass.Text='Windows password'; $lblPass.Location='18,91'; $lblPass.Size='150,22'; $dlg.Controls.Add($lblPass)
+    $txtPass = New-Object System.Windows.Forms.TextBox; $txtPass.Location='175,88'; $txtPass.Size='285,25'; $txtPass.UseSystemPasswordChar=$true; $dlg.Controls.Add($txtPass)
+    $note = New-Object System.Windows.Forms.Label; $note.Text='Password is encrypted for this Windows user. It is never written to JSON or logs.'; $note.Location='18,124'; $note.Size='445,38'; $note.ForeColor=[System.Drawing.Color]::DimGray; $dlg.Controls.Add($note)
+    $save = New-Object System.Windows.Forms.Button; $save.Text='Save Securely'; $save.Location='255,172'; $save.Size='105,32'; $dlg.Controls.Add($save)
+    $cancel = New-Object System.Windows.Forms.Button; $cancel.Text='Cancel'; $cancel.Location='370,172'; $cancel.Size='90,32'; $cancel.DialogResult=[System.Windows.Forms.DialogResult]::Cancel; $dlg.Controls.Add($cancel)
+    $dlg.AcceptButton=$save; $dlg.CancelButton=$cancel
+    $save.Add_Click({
+        if ([string]::IsNullOrWhiteSpace($txtUser.Text) -or [string]::IsNullOrEmpty($txtPass.Text)) { [System.Windows.Forms.MessageBox]::Show('Enter both username and password.','Missing credentials','OK','Warning') | Out-Null; return }
+        try {
+            $secure = ConvertTo-SecureString $txtPass.Text -AsPlainText -Force
+            $credential = New-Object System.Management.Automation.PSCredential($txtUser.Text,$secure)
+            $credential | Export-Clixml -LiteralPath $path -Force
+            $txtPass.Clear()
+            $dlg.DialogResult=[System.Windows.Forms.DialogResult]::OK
+            $dlg.Close()
+        } catch { [System.Windows.Forms.MessageBox]::Show("Could not save encrypted credentials:`r`n$($_.Exception.Message)",'Credential Error','OK','Error') | Out-Null }
+    })
+    [void]$dlg.ShowDialog($form)
+    UpdateCredentialStatus
+}
+function UpdateCredentialStatus {
+    $computer = [string]$computerList.SelectedItem
+    if (!$computer -or !$credentialStatus) { return }
+    $profile = Get-CredentialProfile $computer
+    if (!$profile) { $credentialStatus.Text='No credential profile'; return }
+    $saved = Test-CredentialSaved ([string]$profile.host)
+    $credentialStatus.Text = if ($saved) { "Credentials saved for $($profile.host)" } else { "Credentials not saved for $($profile.host)" }
+    $credentialStatus.ForeColor = if ($saved) { [System.Drawing.Color]::ForestGreen } else { [System.Drawing.Color]::Firebrick }
+}
+
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'Network Backup Manager'
 $form.Size = New-Object System.Drawing.Size(1380, 800)
@@ -162,10 +230,12 @@ $stats = New-Object System.Windows.Forms.Label; $stats.Text = 'SELECTED 0    RUN
 $bar = New-Object System.Windows.Forms.ProgressBar; $bar.Location = '22,78'; $bar.Size = '1320,15'; $form.Controls.Add($bar)
 
 $selectTitle = New-Object System.Windows.Forms.Label; $selectTitle.Text = '1. SELECT COMPUTER'; $selectTitle.Font = New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); $selectTitle.Location = '22,108'; $selectTitle.Size = '250,22'; $form.Controls.Add($selectTitle)
-$computerList = New-Object System.Windows.Forms.ComboBox; $computerList.Location = '22,134'; $computerList.Size = '250,30'; $computerList.DropDownStyle = 'DropDownList'; $computerList.Items.AddRange([string[]]@($script:allJobs | Select-Object -ExpandProperty computer -Unique | Sort-Object)); $form.Controls.Add($computerList)
+$computerList = New-Object System.Windows.Forms.ComboBox; $computerList.Location = '22,134'; $computerList.Size = '250,30'; $computerList.DropDownStyle = 'DropDownList'; $computerNames = @(@($script:allJobs | Select-Object -ExpandProperty computer) + @($cfg.credentialProfiles | Select-Object -ExpandProperty computer) | Sort-Object -Unique); $computerList.Items.AddRange([string[]]$computerNames); $form.Controls.Add($computerList)
 $folderTitle = New-Object System.Windows.Forms.Label; $folderTitle.Text = '2. SELECT FOLDERS TO BACK UP'; $folderTitle.Font = New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); $folderTitle.Location = '300,108'; $folderTitle.Size = '320,22'; $form.Controls.Add($folderTitle)
 $folderList = New-Object System.Windows.Forms.CheckedListBox; $folderList.Location = '300,134'; $folderList.Size = '360,116'; $folderList.CheckOnClick = $true; $folderList.BorderStyle = 'FixedSingle'; $form.Controls.Add($folderList)
 $selectionHint = New-Object System.Windows.Forms.Label; $selectionHint.Text = 'Choose a computer to view its available folders.'; $selectionHint.Location = '680,137'; $selectionHint.Size = '640,25'; $form.Controls.Add($selectionHint)
+$credentialStatus = New-Object System.Windows.Forms.Label; $credentialStatus.Text = 'Select a computer to view credential status.'; $credentialStatus.Location = '680,205'; $credentialStatus.Size = '450,24'; $form.Controls.Add($credentialStatus)
+$credentialButton = New-Object System.Windows.Forms.Button; $credentialButton.Text = 'NETWORK CREDENTIALS'; $credentialButton.Location = '1140,170'; $credentialButton.Size = '190,32'; $form.Controls.Add($credentialButton)
 $selectAll = New-Object System.Windows.Forms.Button; $selectAll.Text = 'Select All'; $selectAll.Location = '680,170'; $selectAll.Size = '100,30'; $form.Controls.Add($selectAll)
 $clearAll = New-Object System.Windows.Forms.Button; $clearAll.Text = 'Clear'; $clearAll.Location = '790,170'; $clearAll.Size = '90,30'; $form.Controls.Add($clearAll)
 
@@ -183,7 +253,8 @@ $form.Controls.Add($grid)
 $foot = New-Object System.Windows.Forms.Label; $foot.Text = "One background worker at a time | Robocopy /Z | No /MIR or /PURGE | Logs: $LogDir"; $foot.Location = '22,715'; $foot.Size = '1250,22'; $foot.Anchor = 'Bottom,Left'; $form.Controls.Add($foot)
 
 $timer = New-Object System.Windows.Forms.Timer; $timer.Interval = 1000; $timer.Add_Tick({ TickQueue })
-$computerList.Add_SelectedIndexChanged({ UpdateFolderChoices })
+$computerList.Add_SelectedIndexChanged({ UpdateFolderChoices; UpdateCredentialStatus })
+$credentialButton.Add_Click({ ShowCredentialDialog })
 $selectAll.Add_Click({ for ($i=0; $i -lt $folderList.Items.Count; $i++) { $folderList.SetItemChecked($i,$true) } })
 $clearAll.Add_Click({ for ($i=0; $i -lt $folderList.Items.Count; $i++) { $folderList.SetItemChecked($i,$false) } })
 $start.Add_Click({ StartQueue $true })

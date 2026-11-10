@@ -1,0 +1,1 @@
+Secure Windows credentials are stored here after you save them in the application. No passwords are included in this package. Files are DPAPI-encrypted for the Windows user and computer that created them. Do not copy these files to another PC or user account.

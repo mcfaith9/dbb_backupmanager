@@ -1,1 +1,3 @@
-logs
+credentials/*.credential.xml
+logs/*
+state/*

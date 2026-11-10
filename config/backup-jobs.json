@@ -1,30 +1,322 @@
-{
-  "settings": {"maxConcurrentJobs": 3, "connectionAttempts": 3, "connectionRetryDelaySeconds": 10, "jobRetryAttempts": 3, "robocopyThreads": 4},
-  "robocopy": {"baseArguments": ["/E", "/Z", "/J", "/R:3", "/W:5", "/ETA", "/FFT", "/COPY:DAT", "/DCOPY:DAT", "/XJ"], "excludeFiles": ["*.exe", "*.ini", "*.tmp", "*.temp", "*.log", "*.bak", "*.old", "*.dmp", "*.etl", "*.cache", "*.wer", "*.lnk"]},
+﻿{
+  "settings": {
+    "maxConcurrentJobs": 3,
+    "connectionAttempts": 3,
+    "connectionRetryDelaySeconds": 10,
+    "jobRetryAttempts": 3,
+    "robocopyThreads": 4
+  },
+  "robocopy": {
+    "baseArguments": [
+      "/E",
+      "/Z",
+      "/J",
+      "/R:3",
+      "/W:5",
+      "/ETA",
+      "/FFT",
+      "/COPY:DAT",
+      "/DCOPY:DAT",
+      "/XJ"
+    ],
+    "excludeFiles": [
+      "*.exe",
+      "*.ini",
+      "*.tmp",
+      "*.temp",
+      "*.log",
+      "*.bak",
+      "*.old",
+      "*.dmp",
+      "*.etl",
+      "*.cache",
+      "*.wer",
+      "*.lnk"
+    ]
+  },
   "jobs": [
-    {"id":"ACE01","computer":"ACE","name":"Downloads","host":"100.92.32.86","source":"\\\\100.92.32.86\\Users\\Asus\\Downloads","destination":"D:\\BACKUP-NEGROS-ACE-9-10-26\\Downloads","enabled":true},
-    {"id":"ACE02","computer":"ACE","name":"OneDrive Documents","host":"100.92.32.86","source":"\\\\100.92.32.86\\Users\\Asus\\OneDrive\\Documents","destination":"D:\\BACKUP-NEGROS-ACE-9-10-26\\OneDrive\\Documents","enabled":true},
-    {"id":"ACE03","computer":"ACE","name":"OneDrive Desktop","host":"100.92.32.86","source":"\\\\100.92.32.86\\Users\\Asus\\OneDrive\\Desktop","destination":"D:\\BACKUP-NEGROS-ACE-9-10-26\\Desktop","enabled":true},
-    {"id":"GAB01","computer":"GAB","name":"Downloads","host":"100.103.47.100","source":"\\\\100.103.47.100\\c\\Users\\DELL\\Downloads","destination":"D:\\BACKUP-NEGROS-GAB-9-10-26\\Downloads","enabled":true},
-    {"id":"GAB02","computer":"GAB","name":"Documents","host":"100.103.47.100","source":"\\\\100.103.47.100\\c\\Users\\DELL\\Documents","destination":"D:\\BACKUP-NEGROS-GAB-9-10-26\\Documents","enabled":true},
-    {"id":"GAB03","computer":"GAB","name":"Desktop","host":"100.103.47.100","source":"\\\\100.103.47.100\\c\\Users\\DELL\\Desktop","destination":"D:\\BACKUP-NEGROS-GAB-9-10-26\\Desktop","enabled":true},
-    {"id":"GAB04","computer":"GAB","name":"Animated Movies","host":"100.103.47.100","source":"\\\\100.103.47.100\\c\\Users\\DELL\\Desktop\\Movies 2\\Animated","destination":"D:\\BACKUP-NEGROS-GAB-9-10-26\\Movies\\Animated","enabled":true},
-    {"id":"TAB01","computer":"TABERNS","name":"Desktop","host":"100.101.169.66","source":"\\\\100.101.169.66\\Users\\JASON\\Desktop","destination":"D:\\BACKUP-ILOILO-TABERNS-9-10-26\\Desktop","enabled":true},
-    {"id":"WENA01","computer":"WENA","name":"Desktop","host":"100.69.70.16","source":"\\\\100.69.70.16\\Users\\USER\\Desktop","destination":"D:\\BACKUP-WENA-9-11-26\\Desktop","enabled":true},
-    {"id":"WENA02","computer":"WENA","name":"Downloads","host":"100.69.70.16","source":"\\\\100.69.70.16\\Users\\USER\\Downloads","destination":"D:\\BACKUP-WENA-9-11-26\\Downloads","enabled":true},
-    {"id":"VINCE01","computer":"VINCE","name":"Downloads","host":"100.77.85.118","source":"\\\\100.77.85.118\\Users\\USER\\Downloads","destination":"D:\\BACKUP-NEGROS-VINCE-9-12-26\\Downloads","enabled":true},
-    {"id":"JOELA01","computer":"JOELA","name":"Desktop","host":"100.67.150.37","source":"\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Desktop","destination":"D:\\BACKUP-ILOILO-JOELA-9-15-26\\Desktop","enabled":true},
-    {"id":"JOELA02","computer":"JOELA","name":"Documents","host":"100.67.150.37","source":"\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Documents","destination":"D:\\BACKUP-ILOILO-JOELA-9-15-26\\Documents","enabled":true},
-    {"id":"JOELA03","computer":"JOELA","name":"Downloads","host":"100.67.150.37","source":"\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Downloads","destination":"D:\\BACKUP-ILOILO-JOELA-9-15-26\\Downloads","enabled":true},
-    {"id":"CHERYL01","computer":"CHERYL","name":"Downloads","host":"100.93.131.7","source":"\\\\100.93.131.7\\c\\Users\\JAYSON\\Downloads","destination":"D:\\BACKUP-CEBU-CHERYL-9-7-26\\Downloads","enabled":true},
-    {"id":"CHERYL02","computer":"CHERYL","name":"Desktop","host":"100.93.131.7","source":"\\\\100.93.131.7\\c\\Users\\JAYSON\\Desktop","destination":"D:\\BACKUP-CEBU-CHERYL-9-7-26\\Desktop","enabled":true},
-    {"id":"SWEET01","computer":"SWEET","name":"Desktop","host":"100.94.14.72","source":"\\\\100.94.14.72\\Users\\DBB Contractor\\Desktop","destination":"D:\\BACKUP-CEBU-SWEET\\Desktop","enabled":true},
-    {"id":"SWEET02","computer":"SWEET","name":"OneDrive Desktop","host":"100.94.14.72","source":"\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Desktop","destination":"D:\\BACKUP-CEBU-SWEET\\OneDrive\\Desktop","enabled":true},
-    {"id":"SWEET03","computer":"SWEET","name":"OneDrive Documents","host":"100.94.14.72","source":"\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Documents","destination":"D:\\BACKUP-CEBU-SWEET\\OneDrive\\Documents","enabled":true},
-    {"id":"SWEET04","computer":"SWEET","name":"OneDrive Email attachments","host":"100.94.14.72","source":"\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Email attachments","destination":"D:\\BACKUP-CEBU-SWEET\\OneDrive\\Email attachments","enabled":true},
-    {"id":"JOY01","computer":"JOY","name":"Downloads","host":"100.127.27.125","source":"\\\\100.127.27.125\\c\\Users\\DBB Acctng\\Downloads","destination":"D:\\BACKUP-CEBU-MERRYJOY\\Downloads","enabled":true},
-    {"id":"JOY02","computer":"JOY","name":"OneDrive Desktop","host":"100.127.27.125","source":"\\\\100.127.27.125\\c\\Users\\DBB Acctng\\OneDrive\\Desktop","destination":"D:\\BACKUP-CEBU-MERRYJOY\\OneDrive\\Desktop","enabled":true},
-    {"id":"JOY03","computer":"JOY","name":"OneDrive Documents","host":"100.127.27.125","source":"\\\\100.127.27.125\\c\\Users\\DBB Acctng\\OneDrive\\Documents","destination":"D:\\BACKUP-CEBU-MERRYJOY\\OneDrive\\Documents","enabled":true},
-    {"id":"JOY04","computer":"JOY","name":"Drive D","host":"100.127.27.125","source":"\\\\100.127.27.125\\d","destination":"D:\\BACKUP-CEBU-MERRYJOY\\Drive D","enabled":true}
+    {
+      "id": "ACE01",
+      "computer": "ACE",
+      "name": "Downloads",
+      "host": "100.92.32.86",
+      "source": "\\\\100.92.32.86\\Users\\Asus\\Downloads",
+      "destination": "D:\\BACKUP-NEGROS-ACE-9-10-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "ACE02",
+      "computer": "ACE",
+      "name": "OneDrive Documents",
+      "host": "100.92.32.86",
+      "source": "\\\\100.92.32.86\\Users\\Asus\\OneDrive\\Documents",
+      "destination": "D:\\BACKUP-NEGROS-ACE-9-10-26\\OneDrive\\Documents",
+      "enabled": true
+    },
+    {
+      "id": "ACE03",
+      "computer": "ACE",
+      "name": "OneDrive Desktop",
+      "host": "100.92.32.86",
+      "source": "\\\\100.92.32.86\\Users\\Asus\\OneDrive\\Desktop",
+      "destination": "D:\\BACKUP-NEGROS-ACE-9-10-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "GAB01",
+      "computer": "GAB",
+      "name": "Downloads",
+      "host": "100.103.47.100",
+      "source": "\\\\100.103.47.100\\c\\Users\\DELL\\Downloads",
+      "destination": "D:\\BACKUP-NEGROS-GAB-9-10-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "GAB02",
+      "computer": "GAB",
+      "name": "Documents",
+      "host": "100.103.47.100",
+      "source": "\\\\100.103.47.100\\c\\Users\\DELL\\Documents",
+      "destination": "D:\\BACKUP-NEGROS-GAB-9-10-26\\Documents",
+      "enabled": true
+    },
+    {
+      "id": "GAB03",
+      "computer": "GAB",
+      "name": "Desktop",
+      "host": "100.103.47.100",
+      "source": "\\\\100.103.47.100\\c\\Users\\DELL\\Desktop",
+      "destination": "D:\\BACKUP-NEGROS-GAB-9-10-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "GAB04",
+      "computer": "GAB",
+      "name": "Animated Movies",
+      "host": "100.103.47.100",
+      "source": "\\\\100.103.47.100\\c\\Users\\DELL\\Desktop\\Movies 2\\Animated",
+      "destination": "D:\\BACKUP-NEGROS-GAB-9-10-26\\Movies\\Animated",
+      "enabled": true
+    },
+    {
+      "id": "TAB01",
+      "computer": "TABERNS",
+      "name": "Desktop",
+      "host": "100.101.169.66",
+      "source": "\\\\100.101.169.66\\Users\\JASON\\Desktop",
+      "destination": "D:\\BACKUP-ILOILO-TABERNS-9-10-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "WENA01",
+      "computer": "WENA",
+      "name": "Desktop",
+      "host": "100.69.70.16",
+      "source": "\\\\100.69.70.16\\Users\\USER\\Desktop",
+      "destination": "D:\\BACKUP-WENA-9-11-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "WENA02",
+      "computer": "WENA",
+      "name": "Downloads",
+      "host": "100.69.70.16",
+      "source": "\\\\100.69.70.16\\Users\\USER\\Downloads",
+      "destination": "D:\\BACKUP-WENA-9-11-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "VINCE01",
+      "computer": "VINCE",
+      "name": "Downloads",
+      "host": "100.77.85.118",
+      "source": "\\\\100.77.85.118\\Users\\USER\\Downloads",
+      "destination": "D:\\BACKUP-NEGROS-VINCE-9-12-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "JOELA01",
+      "computer": "JOELA",
+      "name": "Desktop",
+      "host": "100.67.150.37",
+      "source": "\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Desktop",
+      "destination": "D:\\BACKUP-ILOILO-JOELA-9-15-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "JOELA02",
+      "computer": "JOELA",
+      "name": "Documents",
+      "host": "100.67.150.37",
+      "source": "\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Documents",
+      "destination": "D:\\BACKUP-ILOILO-JOELA-9-15-26\\Documents",
+      "enabled": true
+    },
+    {
+      "id": "JOELA03",
+      "computer": "JOELA",
+      "name": "Downloads",
+      "host": "100.67.150.37",
+      "source": "\\\\100.67.150.37\\c\\Users\\DBB Industrial\\Downloads",
+      "destination": "D:\\BACKUP-ILOILO-JOELA-9-15-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "CHERYL01",
+      "computer": "CHERYL",
+      "name": "Downloads",
+      "host": "100.93.131.7",
+      "source": "\\\\100.93.131.7\\c\\Users\\JAYSON\\Downloads",
+      "destination": "D:\\BACKUP-CEBU-CHERYL-9-7-26\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "CHERYL02",
+      "computer": "CHERYL",
+      "name": "Desktop",
+      "host": "100.93.131.7",
+      "source": "\\\\100.93.131.7\\c\\Users\\JAYSON\\Desktop",
+      "destination": "D:\\BACKUP-CEBU-CHERYL-9-7-26\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "SWEET01",
+      "computer": "SWEET",
+      "name": "Desktop",
+      "host": "100.94.14.72",
+      "source": "\\\\100.94.14.72\\Users\\DBB Contractor\\Desktop",
+      "destination": "D:\\BACKUP-CEBU-SWEET\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "SWEET02",
+      "computer": "SWEET",
+      "name": "OneDrive Desktop",
+      "host": "100.94.14.72",
+      "source": "\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Desktop",
+      "destination": "D:\\BACKUP-CEBU-SWEET\\OneDrive\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "SWEET03",
+      "computer": "SWEET",
+      "name": "OneDrive Documents",
+      "host": "100.94.14.72",
+      "source": "\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Documents",
+      "destination": "D:\\BACKUP-CEBU-SWEET\\OneDrive\\Documents",
+      "enabled": true
+    },
+    {
+      "id": "SWEET04",
+      "computer": "SWEET",
+      "name": "OneDrive Email attachments",
+      "host": "100.94.14.72",
+      "source": "\\\\100.94.14.72\\Users\\DBB Contractor\\OneDrive\\Email attachments",
+      "destination": "D:\\BACKUP-CEBU-SWEET\\OneDrive\\Email attachments",
+      "enabled": true
+    },
+    {
+      "id": "JOY01",
+      "computer": "JOY",
+      "name": "Downloads",
+      "host": "100.127.27.125",
+      "source": "\\\\100.127.27.125\\c\\Users\\DBB Acctng\\Downloads",
+      "destination": "D:\\BACKUP-CEBU-MERRYJOY\\Downloads",
+      "enabled": true
+    },
+    {
+      "id": "JOY02",
+      "computer": "JOY",
+      "name": "OneDrive Desktop",
+      "host": "100.127.27.125",
+      "source": "\\\\100.127.27.125\\c\\Users\\DBB Acctng\\OneDrive\\Desktop",
+      "destination": "D:\\BACKUP-CEBU-MERRYJOY\\OneDrive\\Desktop",
+      "enabled": true
+    },
+    {
+      "id": "JOY03",
+      "computer": "JOY",
+      "name": "OneDrive Documents",
+      "host": "100.127.27.125",
+      "source": "\\\\100.127.27.125\\c\\Users\\DBB Acctng\\OneDrive\\Documents",
+      "destination": "D:\\BACKUP-CEBU-MERRYJOY\\OneDrive\\Documents",
+      "enabled": true
+    },
+    {
+      "id": "JOY04",
+      "computer": "JOY",
+      "name": "Drive D",
+      "host": "100.127.27.125",
+      "source": "\\\\100.127.27.125\\d",
+      "destination": "D:\\BACKUP-CEBU-MERRYJOY\\Drive D",
+      "enabled": true
+    }
+  ],
+  "credentialProfiles": [
+    {
+      "computer": "ACE",
+      "host": "100.92.32.86",
+      "username": "laptop-rrru6scl\\asus"
+    },
+    {
+      "computer": "GAB",
+      "host": "100.103.47.100",
+      "username": "desktop-4c3go0b\\dell"
+    },
+    {
+      "computer": "WENA",
+      "host": "100.69.70.16",
+      "username": "laptop-dbb-negr\\user"
+    },
+    {
+      "computer": "VINCE",
+      "host": "100.77.85.118",
+      "username": "laptop-dbb-negr\\user"
+    },
+    {
+      "computer": "TABERNS",
+      "host": "100.101.169.66",
+      "username": "laptop-7fio3pdb\\jason"
+    },
+    {
+      "computer": "JOELA",
+      "host": "100.67.150.37",
+      "username": "laptop-f8kot6h2\\dbb industrial"
+    },
+    {
+      "computer": "CHERYL",
+      "host": "100.93.131.7",
+      "username": "laptop-8s3npf0l\\jayson"
+    },
+    {
+      "computer": "SWEET",
+      "host": "100.94.14.72",
+      "username": "laptop-tg846a2h\\dbb contractor"
+    },
+    {
+      "computer": "JOY",
+      "host": "100.127.27.125",
+      "username": "laptop-jvn9m746\\dbb acctng"
+    },
+    {
+      "computer": "CEBU PC",
+      "host": "100.67.10.114",
+      "username": "maria_karla\\maria karla"
+    },
+    {
+      "computer": "MERRYJOY PC",
+      "host": "100.89.253.36",
+      "username": "desktop-acctng1"
+    },
+    {
+      "computer": "GASKEN PC",
+      "host": "100.78.229.3",
+      "username": "gasken-092089\\kennith"
+    },
+    {
+      "computer": "SIR JAY",
+      "host": "100.101.3.21",
+      "username": "desktop-ejjit1f\\jayso"
+    }
   ]
 }

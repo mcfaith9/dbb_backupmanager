@@ -1,0 +1,112 @@
+NEGROS ================================
+VINCE
+\\100.77.85.118
+laptop-dbb-negr\user
+ilovedbbnegros1
+
+WENA
+\\100.69.70.16
+laptop-dbb-negr\user
+ilovedbbnegros2
+
+ACE
+\\100.92.32.86
+laptop-rrru6scl\asus
+dbbace1
+
+GAB
+\\100.103.47.100
+desktop-4c3go0b\dell
+dbbgab1
+robocopy "\\100.103.47.100\c\Users\DELL\Downloads" "D:\BACKUP-NEGROS-GAB-9-10-26\Downloads" /E /Z /J /MT:4 /R:3 /W:5 /ETA
+
+WENA
+negroslaptop2@dmbbcontractor.com
+\\100.69.70.16
+laptop-dbb-negr\user
+ilovedbbnegros2
+    
+VINCE                     
+negroslaptop1@dmbbcontractor.com   
+\\100.77.85.118
+laptop-dbb-negr\user
+ilovedbbnegros1
+
+CEBU ======================================
+
+\\100.67.10.114
+maria_karla\maria karla
+1234
+
+
+======================================
+
+ILOILO ================================
+
+Taberns
+\\100.101.169.66
+laptop-7fio3pdb\jason
+dbbiloilo1
+
+MA JOELA
+\\100.67.150.37
+laptop-f8kot6h2\dbb industrial
+dbbiloilo2
+
+CEBU =======================================
+
+Cheryl
+\\100.93.131.7
+laptop-8s3npf0l\jayson
+252001
+
+SWEET
+\\100.94.14.72
+laptop-tg846a2h\dbb contractor
+182023
+
+\\100.78.229.3
+gasken-092089\kennith
+182023
+
+MERRYJOY
+\\100.127.27.125
+laptop-jvn9m746\dbb acctng
+071520
+
+\\100.89.253.36
+desktop-acctng1
+dbb2000
+
+SIR JAY
+\\100.101.3.21
+desktop-ejjit1f\jayso
+ilovedbb
+
+Github Account =======================================
+
+dbbnegros
+!gOLD888
+
+dbbiloilobacolod
+!sILVER999
+
+dbbcsr
+!Sunflower999
+
+icacls "C:\Users\Public"
+icacls "C:\Users\Public" /grant "Users:(OI)(CI)(M)" /T
+
+Robocopy
+robocopy "\\<IP>\<PATH>" "<TARGET PATH EXTERNAL>"
+
+example.
+robocopy "\\100.103.47.100\c\Users\DELL\Downloads" "D:\BACKUP-NEGROS-GAB-9-10-26\Downloads" /E /Z /J /MT:4 /R:3 /W:5 /ETA /XF *.exe
+
+/E — copies all folders/subfolders
+/Z — resumable transfers if the connection drops
+/J — better for large files
+/MT:8 — 8 simultaneous transfer threads
+/R:3 — retry failed files 3 times
+/W:5 — wait 5 seconds between retries
+/XF *.exe — Excludes all .exe files, such as downloaded installers.
