@@ -64,6 +64,28 @@ try {
   $base=@($cfg.robocopy.baseArguments)|Where-Object {$_ -notmatch '^/MT:'}
   $base+=('/MT:'+[int]$cfg.settings.robocopyThreads)
   $robocopyArgs=@($job.source,$job.destination)+$base+@('/XF')+@($cfg.robocopy.excludeFiles)
+  
+  function Format-CmdArgument([string]$value) {
+      if ($value -match '[\s"]') {
+          return '"' + $value.Replace('"', '\"') + '"'
+      }
+      return $value
+  }
+
+  $displayCommand = 'robocopy.exe ' + (
+      $robocopyArgs | ForEach-Object {
+          Format-CmdArgument ([string]$_)
+      }
+  ) -join ' '
+
+  Write-Host ''
+  Write-Host 'ACTUAL ROBOCOPY COMMAND:' -ForegroundColor Cyan
+  Write-Host $displayCommand -ForegroundColor Yellow
+  Write-Host ''
+  Write-Host 'Starting file transfer...' -ForegroundColor Green
+
+  Add-Content -LiteralPath $LogPath -Value "COMMAND: $displayCommand" -Encoding UTF8
+  
   $max=[int]$cfg.settings.jobRetryAttempts
   for($n=1;$n -le $max;$n++){
     Write-Host "`nROBOCOPY ATTEMPT $n/$max"

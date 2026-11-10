@@ -63,13 +63,25 @@ foreach ($job in $script:allJobs) {
     $old = ReadState $job
     if ($old -and $old.status -in @('RUNNING','RETRYING','CHECKING CONNECTION')) { SaveState $job 'STOPPED' 'Previous manager session ended; safe to resume with Robocopy /Z' }
 }
-
 function UpdateFolderChoices {
     $folderList.Items.Clear()
+
     $computer = [string]$computerList.SelectedItem
     if (!$computer) { return }
-    $pcJobs = @($script:allJobs | Where-Object { $_.computer -eq $computer })
-    foreach ($job in $pcJobs) { [void]$folderList.Items.Add($job.name, $false) }
+
+    $pcJobs = @($script:allJobs | Where-Object {
+        $_.computer -eq $computer
+    })
+
+    foreach ($job in $pcJobs) {
+        [void]$folderList.Items.Add($job.name, $false)
+    }
+
+    if (!$script:active -and $script:queue.Count -eq 0) {
+        $script:jobs = $pcJobs
+        RefreshUI
+    }
+
     $selectionHint.Text = "$computer - select only the folders you want to back up."
 }
 function GetSelectedJobs {
@@ -78,6 +90,76 @@ function GetSelectedJobs {
     $names = @()
     foreach ($item in $folderList.CheckedItems) { $names += [string]$item }
     return @($script:allJobs | Where-Object { $_.computer -eq $computer -and $names -contains $_.name })
+}
+function SaveBackupConfig {
+    $cfg | ConvertTo-Json -Depth 30 |
+        Set-Content -LiteralPath $ConfigPath -Encoding UTF8
+}
+function ChangeSelectedDestination {
+    if ($script:active) {
+        [System.Windows.Forms.MessageBox]::Show(
+            'Stop the active backup before changing its destination.',
+            'Backup Running',
+            'OK',
+            'Warning'
+        ) | Out-Null
+        return
+    }
+
+    if ($grid.SelectedRows.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            'Select a backup folder from the table first.'
+        ) | Out-Null
+        return
+    }
+
+    $rowIndex = $grid.SelectedRows[0].Index
+
+    if ($rowIndex -lt 0 -or $rowIndex -ge $script:jobs.Count) {
+        return
+    }
+
+    $job = $script:jobs[$rowIndex]
+
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = "Choose backup destination for $($job.computer) - $($job.name)"
+    $dialog.ShowNewFolderButton = $true
+
+    if (Test-Path -LiteralPath $job.destination) {
+        $dialog.SelectedPath = $job.destination
+    }
+    elseif (Test-Path -LiteralPath ([IO.Path]::GetPathRoot($job.destination))) {
+        $dialog.SelectedPath = [IO.Path]::GetPathRoot($job.destination)
+    }
+
+    if ($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK) {
+        $newDestination = Join-Path $dialog.SelectedPath (Split-Path -Leaf $job.destination)
+
+        $job.destination = $newDestination
+
+        try {
+            SaveBackupConfig
+            Log "Destination changed: $($job.id) -> $newDestination"
+            RefreshUI
+
+            [System.Windows.Forms.MessageBox]::Show(
+                "Backup destination saved:`r`n`r`n$newDestination",
+                'Destination Updated',
+                'OK',
+                'Information'
+            ) | Out-Null
+        }
+        catch {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Could not save destination:`r`n$($_.Exception.Message)",
+                'Configuration Error',
+                'OK',
+                'Error'
+            ) | Out-Null
+        }
+    }
+
+    $dialog.Dispose()
 }
 function RefreshUI {
     $grid.Rows.Clear()
@@ -100,19 +182,57 @@ function RefreshUI {
 }
 function LaunchNextJob {
     if ($script:stopping -or $script:active -or $script:queue.Count -eq 0) { return }
+
     $job = $script:queue[0]
-    if ($script:queue.Count -gt 1) { $script:queue = @($script:queue | Select-Object -Skip 1) } else { $script:queue = @() }
+    if ($script:queue.Count -gt 1) {
+        $script:queue = @($script:queue | Select-Object -Skip 1)
+    } else {
+        $script:queue = @()
+    }
+
     $jobLog = Join-Path $LogDir ($job.id + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
     $credentialPath = Join-Path $CredentialDir ($job.host + '.credential.xml')
-    $arguments = @('-NoLogo','-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',$Worker,'-JobId',$job.id,'-ConfigPath',$ConfigPath,'-StatePath',(StatePath $job),'-LogPath',$jobLog,'-CredentialPath',$credentialPath)
-    $argumentLine = ($arguments | ForEach-Object { '"' + ([string]$_).Replace('"','\"') + '"' }) -join ' '
+
+    $arguments = @(
+        '-NoLogo',
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', $Worker,
+        '-JobId', $job.id,
+        '-ConfigPath', $ConfigPath,
+        '-StatePath', (StatePath $job),
+        '-LogPath', $jobLog,
+        '-CredentialPath', $credentialPath
+    )
+
+    $argumentLine = ($arguments | ForEach-Object {
+        '"' + ([string]$_).Replace('"', '\"') + '"'
+    }) -join ' '
+
     try {
-        SaveState $job 'CHECKING CONNECTION' 'Starting background worker'
-        $process = Start-Process -FilePath 'powershell.exe' -ArgumentList $argumentLine -WindowStyle Hidden -PassThru
-        $script:active = [pscustomobject]@{ Process=$process; Job=$job }
-        Log "Started $($job.id) ($($job.computer) / $($job.name)); PID $($process.Id)"
-    } catch {
-        SaveState $job 'FAILED' ("Could not start worker: " + $_.Exception.Message)
+        SaveState $job 'CHECKING CONNECTION' 'Opening visible CMD window'
+
+        # Run PowerShell worker inside a visible CMD window.
+        # CMD closes automatically when the worker finishes.
+        $cmdLine = 'powershell.exe ' + $argumentLine
+        $cmdArguments = '/c "' + $cmdLine + '"'
+
+        $process = Start-Process `
+            -FilePath $env:ComSpec `
+            -ArgumentList $cmdArguments `
+            -WindowStyle Normal `
+            -PassThru
+
+        $script:active = [pscustomobject]@{
+            Process = $process
+            Job = $job
+        }
+
+        Log "Started visible CMD for $($job.computer) / $($job.name); PID $($process.Id)"
+    }
+    catch {
+        SaveState $job 'FAILED' ("Could not start CMD worker: " + $_.Exception.Message)
         Log "Failed to start $($job.id): $($_.Exception.Message)"
         LaunchNextJob
     }
@@ -264,6 +384,7 @@ $stop = AddButton 'STOP BACKUP' 222 140
 $resume = AddButton 'RESUME SELECTED' 372 170
 $logs = AddButton 'VIEW LOGS' 552 115
 $open = AddButton 'OPEN BACKUP LOCATION' 677 190
+$changeDest = AddButton 'CHANGE DESTINATION' 877 190
 
 $grid = New-Object System.Windows.Forms.DataGridView; $grid.Location = '22,325'; $grid.Size = '1320,380'; $grid.Anchor = 'Top,Bottom,Left,Right'; $grid.AllowUserToAddRows = $false; $grid.AllowUserToDeleteRows = $false; $grid.ReadOnly = $true; $grid.RowHeadersVisible = $false; $grid.SelectionMode = 'FullRowSelect'; $grid.AutoSizeColumnsMode = 'DisplayedCells'; $grid.BackgroundColor = [System.Drawing.Color]::White
 @('COMPUTER','BACKUP FOLDER','SOURCE PATH','DESTINATION PATH','STATUS','PROGRESS','ATTEMPT','EXIT CODE') | ForEach-Object { [void]$grid.Columns.Add($_,$_) }
@@ -281,21 +402,31 @@ $resume.Add_Click({ StartQueue $false })
 $stop.Add_Click({ StopQueue })
 $logs.Add_Click({ Start-Process explorer.exe -ArgumentList ('"' + $LogDir + '"') })
 $open.Add_Click({
-    if ($grid.SelectedRows.Count -gt 0) {
-        $row = $grid.SelectedRows[0].Index
-        if ($row -ge 0 -and $row -lt $script:jobs.Count) {
-            $dest = [string]$script:jobs[$row].destination
-            if (Test-Path -LiteralPath $dest) {
-                Start-Process -FilePath 'explorer.exe' -ArgumentList @($dest)
-            }
-            else {
-                [System.Windows.Forms.MessageBox]::Show(("Destination not created yet:`r`n{0}" -f $dest)) | Out-Null
-            }
+    if ($grid.SelectedRows.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show(
+            'Select a backup folder from the table first.'
+        ) | Out-Null
+        return
+    }
+
+    $row = $grid.SelectedRows[0].Index
+
+    if ($row -ge 0 -and $row -lt $script:jobs.Count) {
+        $dest = [string]$script:jobs[$row].destination
+
+        if (Test-Path -LiteralPath $dest) {
+            Start-Process -FilePath 'explorer.exe' -ArgumentList "`"$dest`""
+        }
+        else {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Destination not created yet:`r`n$dest"
+            ) | Out-Null
         }
     }
-    else {
-        Start-Process -FilePath 'explorer.exe' -ArgumentList @('D:\')
-    }
+})
+
+$changeDest.Add_Click({
+    ChangeSelectedDestination
 })
 $form.Add_Shown({ if ($computerList.Items.Count -gt 0) { $computerList.SelectedIndex = 0 }; RefreshUI })
 $form.Add_FormClosing({
