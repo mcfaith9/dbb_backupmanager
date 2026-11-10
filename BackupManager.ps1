@@ -210,23 +210,42 @@ function LaunchNextJob {
         '"' + ([string]$_).Replace('"', '\"') + '"'
     }) -join ' '
 
-    try {
+    try {        
+        # Run PowerShell worker inside a visible CMD window.
         SaveState $job 'CHECKING CONNECTION' 'Opening visible CMD window'
 
-        # Run PowerShell worker inside a visible CMD window.
-        # CMD closes automatically when the worker finishes.
-        $cmdLine = 'powershell.exe ' + $argumentLine
-        $cmdArguments = '/c "' + $cmdLine + '"'
+        $launcher = Join-Path $env:TEMP (
+            'BackupWorker-' + $job.id + '-' +
+            [guid]::NewGuid().ToString('N') + '.cmd'
+        )
+
+        $cmdLines = @(
+            '@echo off'
+            'color 0A'
+            'mode con: cols=65 lines=50'
+            'title Backup - ' + $job.computer + ' - ' + $job.name
+            'echo ============================================================'
+            'echo BACKUP: ' + $job.computer + ' - ' + $job.name
+            'echo ============================================================'
+            'powershell.exe ' + $argumentLine
+            'set "WORKER_EXIT=%ERRORLEVEL%"'
+            'echo.'
+            'echo Worker finished with exit code %WORKER_EXIT%.'
+            'exit /b %WORKER_EXIT%'
+        )
+
+        Set-Content -LiteralPath $launcher -Value $cmdLines -Encoding ASCII
 
         $process = Start-Process `
             -FilePath $env:ComSpec `
-            -ArgumentList $cmdArguments `
+            -ArgumentList ('/c ""' + $launcher + '""') `
             -WindowStyle Normal `
             -PassThru
 
         $script:active = [pscustomobject]@{
             Process = $process
             Job = $job
+            Launcher = $launcher
         }
 
         Log "Started visible CMD for $($job.computer) / $($job.name); PID $($process.Id)"
@@ -289,6 +308,10 @@ function TickQueue {
                 SaveState $entry.Job 'FAILED' 'Worker exited unexpectedly; check its log'
                 Log "$($entry.Job.id) worker exited unexpectedly"
             }
+            if ($entry.Launcher -and (Test-Path -LiteralPath $entry.Launcher)) {
+                Remove-Item -LiteralPath $entry.Launcher -Force -ErrorAction SilentlyContinue
+            }
+
             $script:active = $null
         }
     }
@@ -357,14 +380,14 @@ function UpdateCredentialStatus {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Network Backup Manager'
+$form.Text = 'DBB BACKUP MANAGER'
 $form.Size = New-Object System.Drawing.Size(1380, 800)
 $form.MinimumSize = New-Object System.Drawing.Size(1120, 700)
 $form.StartPosition = 'CenterScreen'
 $form.BackColor = [System.Drawing.Color]::FromArgb(246,248,250)
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
 
-$heading = New-Object System.Windows.Forms.Label; $heading.Text = 'NETWORK BACKUP MANAGER'; $heading.Font = New-Object System.Drawing.Font('Segoe UI',16,[System.Drawing.FontStyle]::Bold); $heading.Location = '20,14'; $heading.Size = '600,34'; $form.Controls.Add($heading)
+$heading = New-Object System.Windows.Forms.Label; $heading.Text = 'DBB BACKUP MANAGER'; $heading.Font = New-Object System.Drawing.Font('Segoe UI',16,[System.Drawing.FontStyle]::Bold); $heading.Location = '20,14'; $heading.Size = '600,34'; $form.Controls.Add($heading)
 $stats = New-Object System.Windows.Forms.Label; $stats.Text = 'SELECTED 0    RUNNING 0    COMPLETED 0    FAILED 0    OFFLINE 0'; $stats.Location = '22,50'; $stats.Size = '1100,24'; $stats.Font = New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); $form.Controls.Add($stats)
 $bar = New-Object System.Windows.Forms.ProgressBar; $bar.Location = '22,78'; $bar.Size = '1320,15'; $form.Controls.Add($bar)
 
