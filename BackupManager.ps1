@@ -20,6 +20,25 @@ if (!$script:mutex.WaitOne(0, $false)) { [System.Windows.Forms.MessageBox]::Show
 try { $cfg = Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json }
 catch { [System.Windows.Forms.MessageBox]::Show("Invalid backup-jobs.json:`r`n$($_.Exception.Message)", 'Backup Manager', 'OK', 'Error') | Out-Null; exit 1 }
 
+# Provision supplied profile passwords into Windows DPAPI-protected credential files.
+# Plaintext passwords remain in the local JSON because automatic setup was requested.
+foreach ($profile in @($cfg.credentialProfiles)) {
+    if (![string]::IsNullOrWhiteSpace([string]$profile.password) -and ![string]::IsNullOrWhiteSpace([string]$profile.host) -and ![string]::IsNullOrWhiteSpace([string]$profile.username)) {
+        $credentialFile = Join-Path $CredentialDir ([string]$profile.host + '.credential.xml')
+        if (!(Test-Path -LiteralPath $credentialFile)) {
+            try {
+                $securePassword = ConvertTo-SecureString ([string]$profile.password) -AsPlainText -Force
+                $savedCredential = New-Object System.Management.Automation.PSCredential([string]$profile.username, $securePassword)
+                $savedCredential | Export-Clixml -LiteralPath $credentialFile -Force
+                $securePassword = $null
+                $savedCredential = $null
+            } catch {
+                [System.Windows.Forms.MessageBox]::Show("Could not initialize credentials for $($profile.computer):`r`n$($_.Exception.Message)", 'Credential Setup Warning', 'OK', 'Warning') | Out-Null
+            }
+        }
+    }
+}
+
 $script:allJobs = @($cfg.jobs | Where-Object { $_.enabled -ne $false })
 $script:jobs = @()
 $script:active = $null

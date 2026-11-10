@@ -256,67 +256,80 @@
     {
       "computer": "ACE",
       "host": "100.92.32.86",
-      "username": "laptop-rrru6scl\\asus"
+      "username": "laptop-rrru6scl\\asus",
+      "password": "dbbace1"
     },
     {
       "computer": "GAB",
       "host": "100.103.47.100",
-      "username": "desktop-4c3go0b\\dell"
+      "username": "desktop-4c3go0b\\dell",
+      "password": "dbbgab1"
     },
     {
       "computer": "WENA",
       "host": "100.69.70.16",
-      "username": "laptop-dbb-negr\\user"
+      "username": "laptop-dbb-negr\\user",
+      "password": "ilovedbbnegros2"
     },
     {
       "computer": "VINCE",
       "host": "100.77.85.118",
-      "username": "laptop-dbb-negr\\user"
+      "username": "laptop-dbb-negr\\user",
+      "password": "ilovedbbnegros1"
     },
     {
       "computer": "TABERNS",
       "host": "100.101.169.66",
-      "username": "laptop-7fio3pdb\\jason"
+      "username": "laptop-7fio3pdb\\jason",
+      "password": "dbbiloilo1"
     },
     {
       "computer": "JOELA",
       "host": "100.67.150.37",
-      "username": "laptop-f8kot6h2\\dbb industrial"
+      "username": "laptop-f8kot6h2\\dbb industrial",
+      "password": "dbbiloilo2"
     },
     {
       "computer": "CHERYL",
       "host": "100.93.131.7",
-      "username": "laptop-8s3npf0l\\jayson"
+      "username": "laptop-8s3npf0l\\jayson",
+      "password": "252001"
     },
     {
       "computer": "SWEET",
       "host": "100.94.14.72",
-      "username": "laptop-tg846a2h\\dbb contractor"
+      "username": "laptop-tg846a2h\\dbb contractor",
+      "password": "182023"
     },
     {
       "computer": "JOY",
       "host": "100.127.27.125",
-      "username": "laptop-jvn9m746\\dbb acctng"
+      "username": "laptop-jvn9m746\\dbb acctng",
+      "password": "071520"
     },
     {
       "computer": "CEBU PC",
       "host": "100.67.10.114",
-      "username": "maria_karla\\maria karla"
+      "username": "maria_karla\\maria karla",
+      "password": "1234"
     },
     {
       "computer": "MERRYJOY PC",
       "host": "100.89.253.36",
-      "username": "desktop-acctng1"
+      "username": "desktop-acctng1",
+      "password": "dbb2000"
     },
     {
       "computer": "GASKEN PC",
       "host": "100.78.229.3",
-      "username": "gasken-092089\\kennith"
+      "username": "gasken-092089\\kennith",
+      "password": "182023"
     },
     {
       "computer": "SIR JAY",
       "host": "100.101.3.21",
-      "username": "desktop-ejjit1f\\jayso"
+      "username": "desktop-ejjit1f\\jayso",
+      "password": "ilovedbb"
     }
   ]
 }

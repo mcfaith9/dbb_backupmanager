@@ -5,7 +5,7 @@ START
 1. Extract the complete NetworkBackupManager folder on a Windows backup PC.
 2. Confirm drive D: is available and the remote SMB shares are accessible.
 3. Double-click START-BACKUP.bat.
-4. Select a computer, then click NETWORK CREDENTIALS. The username is prefilled; enter the Windows password and click Save Securely. Do this once per computer.
+4. The supplied network passwords are automatically provisioned on first launch into DPAPI-encrypted credential files for the current Windows user. You normally do not need to enter them manually.
 5. Select a computer from the list.
 6. Check only the folders you want to back up (for example, Desktop and Downloads).
 7. Click START SELECTED BACKUP.
@@ -35,7 +35,8 @@ STOP / RESUME
 STOP BACKUP terminates the active worker process tree. Already copied files remain. RESUME SELECTED resumes the current selected folders; completed folders are skipped. Robocopy /Z supports restartable file transfers.
 
 NOTES
-- Windows usernames are prefilled from the supplied PC list. Passwords are entered once through NETWORK CREDENTIALS and stored as DPAPI-encrypted PSCredential XML files under credentials\. These files can only be decrypted by the same Windows user on the same Windows installation. Passwords are not stored in JSON or logs.
+- The supplied passwords are included in config\backup-jobs.json as requested. On first launch, the manager provisions them into DPAPI-encrypted PSCredential XML files under credentials\; workers use the encrypted files. The JSON therefore contains plaintext passwords: restrict access to this folder, do not upload/share it, and change any passwords that have been exposed. The encrypted files can only be decrypted by the same Windows user on the same Windows installation. Passwords are never written to logs.
+- To update a profile password in JSON after credentials have already been provisioned, delete that host’s matching credentials\<IP>.credential.xml file and restart the manager.
 - Do not copy the credentials folder to another PC or Windows user. Re-enter credentials on each backup computer.
 - If Windows reports SMB error 1219, disconnect the old connection to that remote host with net use \\<IP>\* /delete, then retry.
 - A remote PC may be powered on but still fail the SMB check if file sharing or its firewall blocks TCP 445.
