@@ -84,6 +84,81 @@ function UpdateFolderChoices {
 
     $selectionHint.Text = "$computer - select only the folders you want to back up."
 }
+function Test-ComputerReachable($hostName) {
+
+    # First check whether the computer responds to Ping.
+    try {
+        $ping = New-Object System.Net.NetworkInformation.Ping
+        $reply = $ping.Send($hostName, 700)
+
+        if ($reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
+            return $true
+        }
+    }
+    catch {}
+
+    # If Ping is blocked, check Windows file-sharing port 445.
+    $client = New-Object System.Net.Sockets.TcpClient
+
+    try {
+        $async = $client.BeginConnect($hostName, 445, $null, $null)
+
+        if (!$async.AsyncWaitHandle.WaitOne(900, $false)) {
+            return $false
+        }
+
+        $client.EndConnect($async)
+        return $true
+    }
+    catch {
+        return $false
+    }
+    finally {
+        $client.Close()
+    }
+}
+function UpdateComputerStatus {
+
+    $computer = [string]$computerList.SelectedItem
+
+    if ([string]::IsNullOrWhiteSpace($computer)) {
+        $pcStatus.Text = 'PC STATUS: NOT SELECTED'
+        $pcStatus.ForeColor = [System.Drawing.Color]::DimGray
+        return
+    }
+
+    $profile = Get-CredentialProfile $computer
+
+    $hostName = if ($profile) {
+        [string]$profile.host
+    }
+    else {
+        $job = $script:allJobs |
+            Where-Object { $_.computer -eq $computer } |
+            Select-Object -First 1
+
+        if ($job) { [string]$job.host } else { '' }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($hostName)) {
+        $pcStatus.Text = 'PC STATUS: UNKNOWN - NO IP'
+        $pcStatus.ForeColor = [System.Drawing.Color]::DimGray
+        return
+    }
+
+    $pcStatus.Text = "PC STATUS: CHECKING $hostName..."
+    $pcStatus.ForeColor = [System.Drawing.Color]::Goldenrod
+    $pcStatus.Refresh()
+
+    if (Test-ComputerReachable $hostName) {
+        $pcStatus.Text = "PC STATUS: ONLINE - $hostName"
+        $pcStatus.ForeColor = [System.Drawing.Color]::ForestGreen
+    }
+    else {
+        $pcStatus.Text = "PC STATUS: OFFLINE / UNREACHABLE - $hostName"
+        $pcStatus.ForeColor = [System.Drawing.Color]::Firebrick
+    }
+}
 function GetSelectedJobs {
     $computer = [string]$computerList.SelectedItem
     if (!$computer) { return @() }
@@ -393,6 +468,16 @@ $bar = New-Object System.Windows.Forms.ProgressBar; $bar.Location = '22,78'; $ba
 
 $selectTitle = New-Object System.Windows.Forms.Label; $selectTitle.Text = '1. SELECT COMPUTER'; $selectTitle.Font = New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); $selectTitle.Location = '22,108'; $selectTitle.Size = '250,22'; $form.Controls.Add($selectTitle)
 $computerList = New-Object System.Windows.Forms.ComboBox; $computerList.Location = '22,134'; $computerList.Size = '250,30'; $computerList.DropDownStyle = 'DropDownList'; $computerNames = @(@($script:allJobs | Select-Object -ExpandProperty computer) + @($cfg.credentialProfiles | Select-Object -ExpandProperty computer) | Sort-Object -Unique); $computerList.Items.AddRange([string[]]$computerNames); $form.Controls.Add($computerList)
+
+$pcStatus = New-Object System.Windows.Forms.Label
+$pcStatus.Text = 'PC STATUS: NOT SELECTED'
+$pcStatus.Location = '22,174'
+$pcStatus.Size = '270,40'
+$pcStatus.AutoSize = $false
+$pcStatus.Font = New-Object System.Drawing.Font('Segoe UI',9,[System.Drawing.FontStyle]::Bold)
+$pcStatus.ForeColor = [System.Drawing.Color]::DimGray
+$form.Controls.Add($pcStatus)
+
 $folderTitle = New-Object System.Windows.Forms.Label; $folderTitle.Text = '2. SELECT FOLDERS TO BACK UP'; $folderTitle.Font = New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); $folderTitle.Location = '300,108'; $folderTitle.Size = '320,22'; $form.Controls.Add($folderTitle)
 $folderList = New-Object System.Windows.Forms.CheckedListBox; $folderList.Location = '300,134'; $folderList.Size = '360,116'; $folderList.CheckOnClick = $true; $folderList.BorderStyle = 'FixedSingle'; $form.Controls.Add($folderList)
 $selectionHint = New-Object System.Windows.Forms.Label; $selectionHint.Text = 'Choose a computer to view its available folders.'; $selectionHint.Location = '680,137'; $selectionHint.Size = '640,25'; $form.Controls.Add($selectionHint)
@@ -416,7 +501,11 @@ $form.Controls.Add($grid)
 $foot = New-Object System.Windows.Forms.Label; $foot.Text = "One background worker at a time | Robocopy /Z | No /MIR or /PURGE | Logs: $LogDir"; $foot.Location = '22,715'; $foot.Size = '1250,22'; $foot.Anchor = 'Bottom,Left'; $form.Controls.Add($foot)
 
 $timer = New-Object System.Windows.Forms.Timer; $timer.Interval = 1000; $timer.Add_Tick({ TickQueue })
-$computerList.Add_SelectedIndexChanged({ UpdateFolderChoices; UpdateCredentialStatus })
+$computerList.Add_SelectedIndexChanged({
+    UpdateFolderChoices
+    UpdateCredentialStatus
+    UpdateComputerStatus
+})
 $credentialButton.Add_Click({ ShowCredentialDialog })
 $selectAll.Add_Click({ for ($i=0; $i -lt $folderList.Items.Count; $i++) { $folderList.SetItemChecked($i,$true) } })
 $clearAll.Add_Click({ for ($i=0; $i -lt $folderList.Items.Count; $i++) { $folderList.SetItemChecked($i,$false) } })
