@@ -108,6 +108,15 @@
       "enabled": true
     },
     {
+      "id": "TAB02",
+      "computer": "TABERNS",
+      "name": "Desktop",
+      "host": "100.101.169.66",
+      "source": "\\\\100.101.169.66\\Users\\JASON\\Downloads",
+      "destination": "D:\\BACKUP-ILOILO-TABERNS-9-10-26\\Downloads",
+      "enabled": true
+    },
+    {
       "id": "WENA01",
       "computer": "WENA",
       "name": "Desktop",
